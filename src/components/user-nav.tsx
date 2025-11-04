@@ -2,8 +2,7 @@
 
 import { signOut } from 'firebase/auth';
 import { CreditCard, LogOut, User as UserIcon } from 'lucide-react';
-import { auth } from '@/lib/firebase';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, useUser } from '@/firebase';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function UserNav() {
-  const { user } = useAuth();
+  const { user } = useUser();
+  const auth = useAuth();
 
   if (!user) {
     return null;

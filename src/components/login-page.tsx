@@ -1,10 +1,10 @@
 "use client";
 import { useState } from 'react';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import Link from 'next/link';
 import { Gift, Chrome } from 'lucide-react';
 
-import { auth, googleProvider } from '@/lib/firebase';
+import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,8 @@ export function LoginPage() {
   const [agreed, setAgreed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const auth = useAuth();
+  const googleProvider = new GoogleAuthProvider();
 
   const handleSignIn = async () => {
     if (!agreed) {
