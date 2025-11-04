@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/firebase/provider';
 import { setDocumentNonBlocking } from '../non-blocking-updates';
 import { doc } from 'firebase/firestore';
@@ -28,13 +28,25 @@ export function useUser(): UserHookResult {
       if (firebaseUser) {
         setUser(firebaseUser);
         const userRef = doc(firestore, 'users', firebaseUser.uid);
+        
+        const isGoogleSignIn = firebaseUser.providerData.some(
+          (provider) => provider.providerId === GoogleAuthProvider.PROVIDER_ID
+        );
+
+        let displayName = firebaseUser.displayName;
+        let photoURL = firebaseUser.photoURL;
+
+        if (!isGoogleSignIn && !displayName && firebaseUser.email) {
+            displayName = firebaseUser.email.split('@')[0];
+        }
+
         setDocumentNonBlocking(
           userRef,
           {
             id: firebaseUser.uid,
             email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
+            displayName: displayName,
+            photoURL: photoURL,
             termsAgreed: true,
           },
           { merge: true }

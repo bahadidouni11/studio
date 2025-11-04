@@ -35,7 +35,6 @@
       },
       "required": [
         "id",
-        "googleId",
         "email",
         "displayName",
         "termsAgreed"
@@ -116,7 +115,8 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
