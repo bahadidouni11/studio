@@ -120,7 +120,16 @@ service cloud.firestore {
                            // Referral reward logic
                            (
                             incomingPoints() == existingPoints() + 1500 &&
-                            incomingLastLoginReward() == existingLastLoginReward()
+                            incomingLastLoginReward() == existingLastLoginReward() &&
+                            incomingLastWheelSpin() == existingLastWheelSpin()
+                           )
+                           ||
+                           // Ad watch reward logic
+                           (
+                            incomingPoints() > existingPoints() &&
+                            incomingPoints() <= existingPoints() + 50 &&
+                            incomingLastLoginReward() == existingLastLoginReward() &&
+                            incomingLastWheelSpin() == existingLastWheelSpin()
                            )
                            ||
                            // Allow other fields to be updated without changing points/reward time

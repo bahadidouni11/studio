@@ -30,7 +30,7 @@ const offers = [
     id: 'play-earn',
     title: 'Play & Earn',
     icon: <PlayAndEarnIcon />,
-    href: '/coming-soon',
+    href: '/play-and-earn',
   },
   {
     id: 'offers',
