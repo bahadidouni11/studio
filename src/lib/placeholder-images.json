@@ -1,3 +1,40 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "offer-1",
+      "description": "A person using a laptop",
+      "imageUrl": "https://images.unsplash.com/photo-1543269664-02e941c052f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsYXB0b3AlMjBwZXJzb258ZW58MHx8fHwxNzYyMjQ1NDgyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "laptop person"
+    },
+    {
+      "id": "offer-2",
+      "description": "A mobile phone screen with apps",
+      "imageUrl": "https://images.unsplash.com/photo-1523206489230-c012c64b2b48?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxtb2JpbGUlMjBwaG9uZXxlbnwwfHx8fDE3NjIxNjMzMzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mobile phone"
+    },
+    {
+      "id": "offer-3",
+      "description": "A person shopping online",
+      "imageUrl": "https://images.unsplash.com/photo-1605902711834-8b11c3e3ef2f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxvbmxpbmUlMjBzaG9wcGluZ3xlbnwwfHx8fDE3NjIxNzUyOTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "online shopping"
+    },
+    {
+      "id": "offer-4",
+      "description": "A desk with a computer and coffee",
+      "imageUrl": "https://images.unsplash.com/photo-1646596549459-9ccf652c5d23?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkZXNrJTIwY29tcHV0ZXJ8ZW58MHx8fHwxNzYyMTg3OTk5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "desk computer"
+    },
+    {
+      "id": "offer-5",
+      "description": "Data charts and graphs on a screen",
+      "imageUrl": "https://images.unsplash.com/photo-1748609160056-7b95f30041f0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkYXRhJTIwY2hhcnRzfGVufDB8fHx8MTc2MjE0NTE1OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "data charts"
+    },
+    {
+      "id": "offer-6",
+      "description": "A person listening to music with headphones",
+      "imageUrl": "https://images.unsplash.com/photo-1598488035252-042a85bc8e5a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxtdXNpYyUyMGhlYWRwaG9uZXN8ZW58MHx8fHwxNzYyMjU1MjIxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "music headphones"
+    }
+  ]
 }
