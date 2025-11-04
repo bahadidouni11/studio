@@ -1,71 +1,120 @@
-import Image from 'next/image';
-import { DollarSign, Zap } from 'lucide-react';
+'use client';
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  BarChart2,
+  CheckCircle,
+  HelpCircle,
+  Home,
+  Store,
+  Users,
+} from 'lucide-react';
+
+import { Card, CardContent } from '@/components/ui/card';
 import { Header } from './header';
-import { OfferCard } from './offer-card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { DiceIcon } from './dice-icon';
+import { PlayAndEarnIcon } from './play-and-earn-icon';
+import { SurveyIcon } from './survey-icon';
 
-type Offer = {
-  id: string;
-  title: string;
-  description: string;
-  reward: string;
-  imageUrl: string;
-  imageHint: string;
-};
-
-const offers: Offer[] = PlaceHolderImages.filter(img => img.id.startsWith('offer-')).map((img, index) => ({
-  id: `offer-${index + 1}`,
-  title: `Complete Survey #${index + 1}`,
-  description: `Share your opinion on the latest tech trends and earn rewards. Your feedback helps shape future products.`,
-  reward: `$${(Math.random() * 5 + 1).toFixed(2)}`,
-  imageUrl: img.imageUrl,
-  imageHint: img.imageHint,
-}));
+const offers = [
+  {
+    title: 'Login Reward',
+    status: 'Reward Collected',
+    icon: <CheckCircle className="h-10 w-10 text-gray-400" />,
+    disabled: true,
+  },
+  {
+    title: 'Play & Earn',
+    icon: <PlayAndEarnIcon />,
+  },
+  {
+    title: 'Offers',
+    icon: <Store className="h-10 w-10 text-white" />,
+  },
+  {
+    title: 'Surveys',
+    icon: <SurveyIcon />,
+  },
+  {
+    title: 'Wheel Of',
+    icon: <DiceIcon />,
+  },
+  {
+    title: 'Stats',
+    icon: <BarChart2 className="h-10 w-10 text-white" />,
+  },
+];
 
 export default function Dashboard() {
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-gray-900 text-white">
       <Header />
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Rewards</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
-              <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Offers Completed</CardTitle>
-              <Zap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">+23</div>
-              <p className="text-xs text-muted-foreground">+5 since last week</p>
-            </CardContent>
-          </Card>
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight mb-4">Available Offers</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {offers.map((offer) => (
-              <OfferCard key={offer.id} offer={offer} />
-            ))}
-          </div>
+      <main className="flex-1 overflow-y-auto p-4">
+        <Card className="mb-6 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-6">
+          <CardContent className="flex items-center justify-between">
+            <div>
+              <p className="text-lg text-gray-200">Your Points</p>
+              <p className="text-4xl font-bold">3,774</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white bg-opacity-20">
+              <p className="text-2xl font-bold text-white">$</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <h2 className="mb-4 text-xl font-semibold">Offers</h2>
+        <div className="grid grid-cols-2 gap-4">
+          {offers.map((offer, index) => (
+            <Card
+              key={index}
+              className={`flex h-32 flex-col items-center justify-center rounded-2xl ${
+                offer.disabled
+                  ? 'bg-gray-700'
+                  : 'bg-gradient-to-br from-purple-700 to-blue-700'
+              }`}
+            >
+              <CardContent className="flex flex-col items-center justify-center text-center">
+                {offer.icon}
+                <p className="mt-2 text-sm font-semibold">{offer.title}</p>
+                {offer.status && (
+                  <p className="text-xs text-gray-400">{offer.status}</p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </main>
+      <Footer />
     </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mt-auto border-t border-gray-700 bg-gray-900 p-2">
+      <div className="flex justify-around">
+        <button className="flex flex-col items-center text-blue-400">
+          <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-blue-500 bg-opacity-30">
+            <Home className="h-6 w-6" />
+          </div>
+          <span className="text-xs">Home</span>
+        </button>
+        <button className="flex flex-col items-center text-gray-400">
+          <Store className="h-6 w-6" />
+          <span className="mt-2 text-xs">Store</span>
+        </button>
+        <button className="flex flex-col items-center text-gray-400">
+          <BarChart2 className="h-6 w-6" />
+          <span className="mt-2 text-xs">Orders</span>
+        </button>
+        <button className="flex flex-col items-center text-gray-400">
+          <HelpCircle className="h-6 w-6" />
+          <span className="mt-2 text-xs">Support</span>
+        </button>
+        <button className="flex flex-col items-center text-gray-400">
+          <Users className="h-6 w-6" />
+          <span className="mt-2 text-xs">Invite</span>
+        </button>
+      </div>
+    </footer>
   );
 }

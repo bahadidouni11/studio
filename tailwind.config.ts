@@ -1,4 +1,4 @@
-import type {Config} from 'tailwindcss';
+import type { Config } from 'tailwindcss';
 
 export default {
   darkMode: ['class'],
@@ -64,6 +64,22 @@ export default {
           'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
+        },
+        gray: {
+          900: '#111827',
+          700: '#374151',
+          400: '#9CA3AF',
+          200: '#E5E7EB',
+        },
+        purple: {
+          600: '#7C3AED',
+          700: '#6D28D9',
+        },
+        blue: {
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
         },
       },
       borderRadius: {
