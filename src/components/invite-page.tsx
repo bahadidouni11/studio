@@ -149,7 +149,7 @@ function Footer() {
             <Home className="h-6 w-6" />
             <span className="mt-2 text-xs">Home</span>
           </Link>
-          <Link href="/coming-soon" className="flex flex-col items-center text-gray-400">
+          <Link href="/store" className="flex flex-col items-center text-gray-400">
             <Store className="h-6 w-6" />
             <span className="mt-2 text-xs">Store</span>
           </Link>
