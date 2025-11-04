@@ -17,6 +17,25 @@ export function initializeFirebase() {
     };
   }
 
+  // Check if all required config keys are present
+  const isConfigValid =
+    firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId;
+
+  if (!isConfigValid) {
+    console.error(
+      'Firebase config is missing or invalid. Please check your .env.local file.'
+    );
+    // Return nulls if config is invalid to prevent app crash
+    return {
+      firebaseApp: null,
+      auth: null,
+      firestore: null,
+    };
+  }
+
+
   if (!getApps().length) {
     let firebaseApp;
     try {
