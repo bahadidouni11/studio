@@ -36,7 +36,7 @@ const offers = [
     id: 'offers',
     title: 'Offers',
     icon: <Store className="h-10 w-10 text-white" />,
-    href: '/coming-soon',
+    href: '/offers',
   },
   {
     id: 'surveys',
