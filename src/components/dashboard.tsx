@@ -54,7 +54,7 @@ const offers = [
     id: 'invite',
     title: 'Invite',
     icon: <Users className="h-10 w-10 text-white" />,
-    href: '#',
+    href: '/invite',
   },
 ];
 
@@ -111,24 +111,6 @@ export default function Dashboard() {
     setIsLoginRewardClaimed(true);
   };
   
-  const handleInvite = () => {
-    if (!user) return;
-    const referralLink = `${window.location.origin}/?ref=${user.uid}`;
-    navigator.clipboard.writeText(referralLink).then(() => {
-      toast({
-        title: 'Link Copied!',
-        description: 'Your referral link has been copied to the clipboard.',
-      });
-    }).catch(err => {
-      console.error('Failed to copy referral link: ', err);
-      toast({
-        title: 'Failed to Copy',
-        description: 'Could not copy the referral link.',
-        variant: 'destructive',
-      });
-    });
-  };
-
   const getOfferStatus = (offerId: string) => {
     if (offerId === 'login-reward') {
       return isLoginRewardClaimed ? 'Reward Collected' : 'Collect Reward';
@@ -139,9 +121,6 @@ export default function Dashboard() {
   const getOfferAction = (offerId: string) => {
     if (offerId === 'login-reward') {
         return handleLoginReward;
-    }
-    if (offerId === 'invite') {
-        return handleInvite;
     }
     return undefined;
   }
@@ -175,13 +154,14 @@ export default function Dashboard() {
             const status = getOfferStatus(offer.id);
             const action = getOfferAction(offer.id);
 
+            const Wrapper = offer.href === '#' ? 'div' : Link;
+            
             return (
-              <Link 
+              <Wrapper 
                 key={offer.id} 
                 href={isDisabled ? '#' : offer.href} 
                 onClick={action}
                 className={isDisabled ? 'pointer-events-none' : ''}
-                passHref
               >
                 <Card
                   className={`flex h-32 flex-col items-center justify-center rounded-2xl ${
@@ -198,7 +178,7 @@ export default function Dashboard() {
                     )}
                   </CardContent>
                 </Card>
-              </Link>
+              </Wrapper>
             );
           })}
         </div>
@@ -235,7 +215,7 @@ function Footer() {
           <HelpCircle className="h-6 w-6" />
           <span className="mt-2 text-xs">Support</span>
         </a>
-        <Link href="/coming-soon" className="flex flex-col items-center text-gray-400">
+        <Link href="/invite" className="flex flex-col items-center text-gray-400">
           <Users className="h-6 w-6" />
           <span className="mt-2 text-xs">Invite</span>
         </Link>

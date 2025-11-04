@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export function LoginPage() {
   const [agreed, setAgreed] = useState(false);
@@ -71,7 +70,7 @@ export function LoginPage() {
         const referrerRef = doc(firestore, 'users', referralCode);
         const referrerDoc = await getDoc(referrerRef);
         if (referrerDoc.exists()) {
-           batch.update(referrerRef, { points: increment(3000) });
+           batch.update(referrerRef, { points: increment(1500) });
            localStorage.removeItem('referralCode'); // Clear after use
         }
       }

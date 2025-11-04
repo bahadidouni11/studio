@@ -93,7 +93,7 @@ service cloud.firestore {
                            || 
                            // Referral reward logic
                            (
-                            incomingPoints() == existingPoints() + 3000 &&
+                            incomingPoints() == existingPoints() + 1500 &&
                             incomingLastLoginReward() == existingLastLoginReward()
                            )
                            ||
