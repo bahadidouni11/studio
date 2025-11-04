@@ -27,6 +27,14 @@ export function useUser(): UserHookResult {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
+        
+        // For anonymous users, the profile update is handled on the login page
+        // to include the phone number. We don't need to do anything here for them.
+        if (firebaseUser.isAnonymous) {
+          setIsUserLoading(false);
+          return;
+        }
+
         const userRef = doc(firestore, 'users', firebaseUser.uid);
         
         const isGoogleSignIn = firebaseUser.providerData.some(

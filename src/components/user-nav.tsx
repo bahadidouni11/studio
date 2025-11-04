@@ -2,7 +2,8 @@
 
 import { signOut } from 'firebase/auth';
 import { CreditCard, LogOut, User as UserIcon } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,14 @@ import {
 export function UserNav() {
   const { user } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
+  
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc(userDocRef);
 
   if (!user || !auth) {
     return null;
@@ -37,21 +46,24 @@ export function UserNav() {
     return names[0].substring(0, 2).toUpperCase();
   };
 
+  const displayName = user.displayName || userProfile?.displayName;
+  const displayInfo = userProfile?.phoneNumber || user.email;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+            <AvatarImage src={user.photoURL ?? ''} alt={displayName ?? 'User'} />
+            <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.displayName}</p>
-            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+            {displayName && <p className="text-sm font-medium leading-none">{displayName}</p>}
+            {displayInfo && <p className="text-xs leading-none text-muted-foreground">{displayInfo}</p>}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

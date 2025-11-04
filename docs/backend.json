@@ -10,22 +10,17 @@
           "type": "string",
           "description": "Unique identifier for the user profile."
         },
-        "googleId": {
+        "phoneNumber": {
           "type": "string",
-          "description": "The user's Google ID, obtained from Google Sign-In."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email address.",
-          "format": "email"
+          "description": "The user's phone number."
         },
         "displayName": {
           "type": "string",
-          "description": "The user's display name, obtained from Google Sign-In."
+          "description": "The user's display name."
         },
         "photoURL": {
           "type": "string",
-          "description": "URL of the user's profile picture, obtained from Google Sign-In.",
+          "description": "URL of the user's profile picture.",
           "format": "uri"
         },
         "termsAgreed": {
@@ -35,8 +30,6 @@
       },
       "required": [
         "id",
-        "email",
-        "displayName",
         "termsAgreed"
       ]
     },
@@ -114,9 +107,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous",
-      "google.com"
+      "anonymous"
     ]
   },
   "firestore": {
