@@ -35,6 +35,11 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp of the last daily login reward claim."
+        },
+        "lastWheelSpin": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the last daily lucky wheel spin."
         }
       },
       "required": [

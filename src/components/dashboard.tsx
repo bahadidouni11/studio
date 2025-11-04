@@ -48,7 +48,7 @@ const offers = [
     id: 'wheel-of',
     title: 'Wheel Of',
     icon: <DiceIcon />,
-    href: '/coming-soon',
+    href: '/wheel',
   },
   {
     id: 'invite',

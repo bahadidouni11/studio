@@ -64,6 +64,7 @@ export function LoginPage() {
         termsAgreed: true,
         points: 0,
         lastLoginReward: null,
+        lastWheelSpin: null,
       }, { merge: true });
 
       if (referralCode && referralCode !== user.uid) {

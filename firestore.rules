@@ -67,6 +67,14 @@ service cloud.firestore {
          return resource.data.get('lastLoginReward', null);
       }
 
+      function incomingLastWheelSpin() {
+        return request.resource.data.lastWheelSpin;
+      }
+      
+      function existingLastWheelSpin() {
+         return resource.data.get('lastWheelSpin', null);
+      }
+
       // Allow reads only to the owner
       allow get: if isOwner(userId);
       allow list: if false;
@@ -74,8 +82,9 @@ service cloud.firestore {
       // Allow profile creation with initial data
       allow create: if isOwner(userId) 
                     && request.resource.data.id == userId
-                    && request.resource.data.points == 0
-                    && request.resource.data.lastLoginReward == null;
+                    && incomingPoints() == 0
+                    && incomingLastLoginReward() == null
+                    && incomingLastWheelSpin() == null;
 
       // Allow updates by the owner with specific constraints
       allow update: if isExistingOwner(userId)
@@ -89,12 +98,36 @@ service cloud.firestore {
                             && (existingLastLoginReward() == null || request.time > existingLastLoginReward() + duration.value(24, 'h'))
                             // Ensure points increase by exactly 100
                             && incomingPoints() == existingPoints() + 100
-                           ) 
+                            && incomingLastWheelSpin() == existingLastWheelSpin()
+                           )
+                           ||
+                           // Daily wheel spin logic
+                          (
+                            incomingLastWheelSpin() != existingLastWheelSpin()
+                            && (existingLastWheelSpin() == null || request.time > existingLastWheelSpin() + duration.value(24, 'h'))
+                            // Points can increase by 0, 5, 50, 75, 100, 200
+                            && (
+                              incomingPoints() == existingPoints() ||
+                              incomingPoints() == existingPoints() + 5 ||
+                              incomingPoints() == existingPoints() + 50 ||
+                              incomingPoints() == existingPoints() + 75 ||
+                              incomingPoints() == existingPoints() + 100 ||
+                              incomingPoints() == existingPoints() + 200
+                            )
+                            && incomingLastLoginReward() == existingLastLoginReward()
+                          )
                            || 
+                           // Referral reward logic
+                           (
+                            incomingPoints() == existingPoints() + 1500 &&
+                            incomingLastLoginReward() == existingLastLoginReward()
+                           )
+                           ||
                            // Allow other fields to be updated without changing points/reward time
                            (
                             incomingPoints() == existingPoints() &&
-                            incomingLastLoginReward() == existingLastLoginReward()
+                            incomingLastLoginReward() == existingLastLoginReward() &&
+                            incomingLastWheelSpin() == existingLastWheelSpin()
                            )
                          );
 
