@@ -60,11 +60,18 @@ export function LoginPage() {
           id: user.uid,
           phoneNumber: phoneNumber,
           termsAgreed: true,
+          points: 0,
+          lastLoginReward: null,
         },
         { merge: true }
       );
 
     } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        // Do nothing if user closes the popup
+        setIsLoading(false);
+        return;
+      }
       console.error("Anonymous sign-in error:", error);
       toast({
         title: "Sign-in Failed",

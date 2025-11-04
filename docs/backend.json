@@ -26,6 +26,15 @@
         "termsAgreed": {
           "type": "boolean",
           "description": "Indicates whether the user has agreed to the terms and privacy policy."
+        },
+        "points": {
+          "type": "number",
+          "description": "The total reward points for the user."
+        },
+        "lastLoginReward": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the last daily login reward claim."
         }
       },
       "required": [

@@ -3,7 +3,7 @@
  *
  * Core Philosophy:
  * This ruleset enforces a strict user-ownership model for user profiles and offer progress,
- * while allowing public read access to offers.  Authorization is primarily path-based.
+ * while allowing public read access to offers. Authorization is primarily path-based.
  *
  * Data Structure:
  * - /users/{userId}: Stores user profile data, accessible only to the user themselves.
@@ -15,11 +15,10 @@
  * - Users can only access their own profile data and offer progress.
  * - Offers are publicly readable but not writable by clients.
  * - Listing of offers is public. Listing of user offer progress is restricted to the user.
- * - The rules do not enforce data schema validation beyond authorization-critical fields,
- *   allowing for rapid iteration on the data model.
+ * - The rules perform schema validation for critical fields like points and daily rewards.
  *
  * Denormalization for Authorization:
- * - Path-based authorization is used to avoid `get()` calls.  The `userId` in the paths
+ * - Path-based authorization is used to avoid `get()` calls. The `userId` in the paths
  *   `/users/{userId}` and `/users/{userId}/offerProgress/{offerId}` is the single source
  *   of truth for access control.
  *
@@ -51,10 +50,34 @@ service cloud.firestore {
           return isOwner(userId) && resource != null;
       }
 
+      // Allow reads only to the owner
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+
+      // Allow profile creation with initial data
+      allow create: if isOwner(userId) 
+                    && request.resource.data.id == userId
+                    && request.resource.data.points == 0
+                    && request.resource.data.lastLoginReward == null;
+
+      // Allow updates by the owner with specific constraints
+      allow update: if isExistingOwner(userId)
+                     && request.resource.data.id == resource.data.id
+                     // Daily login reward logic:
+                     // Can only update lastLoginReward if it's more than 24h ago
+                     // And points increase by exactly 100
+                     && (
+                          (
+                            request.resource.data.lastLoginReward != resource.data.lastLoginReward
+                            && request.time > resource.data.lastLoginReward + duration.value(24, 'h')
+                            && request.resource.data.points == resource.data.points + 100
+                           ) || (
+                            // Allow other fields to be updated without changing points/reward time
+                            request.resource.data.points == resource.data.points &&
+                            request.resource.data.lastLoginReward == resource.data.lastLoginReward
+                           )
+                         );
+
       allow delete: if isExistingOwner(userId);
     }
 

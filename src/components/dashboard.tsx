@@ -5,46 +5,53 @@ import {
   CheckCircle,
   HelpCircle,
   Home,
-  MessageSquare,
   Store,
   Users,
 } from 'lucide-react';
+import { serverTimestamp, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Header } from './header';
 import { DiceIcon } from './dice-icon';
 import { PlayAndEarnIcon } from './play-and-earn-icon';
 import { SurveyIcon } from './survey-icon';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
 
 const offers = [
   {
+    id: 'login-reward',
     title: 'Login Reward',
-    status: 'Reward Collected',
     icon: <CheckCircle className="h-10 w-10 text-gray-400" />,
-    disabled: true,
     href: '#',
   },
   {
+    id: 'play-earn',
     title: 'Play & Earn',
     icon: <PlayAndEarnIcon />,
     href: '/coming-soon',
   },
   {
+    id: 'offers',
     title: 'Offers',
     icon: <Store className="h-10 w-10 text-white" />,
     href: '/coming-soon',
   },
   {
+    id: 'surveys',
     title: 'Surveys',
     icon: <SurveyIcon />,
     href: '/coming-soon',
   },
   {
+    id: 'wheel-of',
     title: 'Wheel Of',
     icon: <DiceIcon />,
     href: '/coming-soon',
   },
   {
+    id: 'stats',
     title: 'Stats',
     icon: <BarChart2 className="h-10 w-10 text-white" />,
     href: '/coming-soon',
@@ -52,6 +59,71 @@ const offers = [
 ];
 
 export default function Dashboard() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isLoginRewardClaimed, setIsLoginRewardClaimed] = useState(true);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<{
+    points: number;
+    lastLoginReward?: Timestamp;
+  }>(userDocRef);
+
+  useEffect(() => {
+    if (userProfile?.lastLoginReward) {
+      const lastClaimed = userProfile.lastLoginReward.toMillis();
+      const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+      setIsLoginRewardClaimed(lastClaimed > twentyFourHoursAgo);
+    } else {
+      setIsLoginRewardClaimed(false);
+    }
+  }, [userProfile]);
+
+  const handleLoginReward = async () => {
+    if (!userDocRef || !firestore || !userProfile) return;
+
+    if (isLoginRewardClaimed) {
+      toast({
+        title: 'Reward Already Claimed',
+        description: 'You can claim the daily login reward once every 24 hours.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const newPoints = (userProfile.points || 0) + 100;
+      await updateDoc(userDocRef, {
+        points: newPoints,
+        lastLoginReward: serverTimestamp(),
+      });
+      toast({
+        title: 'Reward Claimed!',
+        description: 'You have received 100 points.',
+      });
+      setIsLoginRewardClaimed(true);
+    } catch (error) {
+      console.error('Error claiming login reward:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not claim the reward. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const getOfferStatus = (offerId: string) => {
+    if (offerId === 'login-reward') {
+      return isLoginRewardClaimed ? 'Reward Collected' : 'Collect Reward';
+    }
+    return undefined;
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-900 text-white">
       <Header />
@@ -60,7 +132,13 @@ export default function Dashboard() {
           <CardContent className="flex items-center justify-between">
             <div>
               <p className="text-lg text-gray-200">Your Points</p>
-              <p className="text-4xl font-bold">3,774</p>
+              {isProfileLoading ? (
+                 <p className="text-4xl font-bold">...</p>
+              ) : (
+                <p className="text-4xl font-bold">
+                  {userProfile?.points?.toLocaleString() || '0'}
+                </p>
+              )}
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white bg-opacity-20">
               <p className="text-2xl font-bold text-white">$</p>
@@ -70,25 +148,35 @@ export default function Dashboard() {
 
         <h2 className="mb-4 text-xl font-semibold">Offers</h2>
         <div className="grid grid-cols-2 gap-4">
-          {offers.map((offer, index) => (
-            <Link key={index} href={offer.disabled ? '#' : offer.href} className={offer.disabled ? 'pointer-events-none' : ''}>
-              <Card
-                className={`flex h-32 flex-col items-center justify-center rounded-2xl ${
-                  offer.disabled
-                    ? 'bg-gray-700'
-                    : 'bg-gradient-to-br from-purple-700 to-blue-700'
-                }`}
+          {offers.map((offer) => {
+            const isDisabled = offer.id === 'login-reward' && isLoginRewardClaimed;
+            const status = getOfferStatus(offer.id);
+
+            return (
+              <Link 
+                key={offer.id} 
+                href={isDisabled ? '#' : offer.href} 
+                onClick={offer.id === 'login-reward' ? handleLoginReward : undefined}
+                className={isDisabled ? 'pointer-events-none' : ''}
               >
-                <CardContent className="flex flex-col items-center justify-center text-center">
-                  {offer.icon}
-                  <p className="mt-2 text-sm font-semibold">{offer.title}</p>
-                  {offer.status && (
-                    <p className="text-xs text-gray-400">{offer.status}</p>
-                  )}
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                <Card
+                  className={`flex h-32 flex-col items-center justify-center rounded-2xl ${
+                    isDisabled
+                      ? 'bg-gray-700'
+                      : 'bg-gradient-to-br from-purple-700 to-blue-700'
+                  }`}
+                >
+                  <CardContent className="flex flex-col items-center justify-center text-center">
+                    {offer.icon}
+                    <p className="mt-2 text-sm font-semibold">{offer.title}</p>
+                    {status && (
+                      <p className="text-xs text-gray-400">{status}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       </main>
       <Footer />
