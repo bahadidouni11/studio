@@ -20,7 +20,7 @@ export function UserNav() {
   const { user } = useUser();
   const auth = useAuth();
 
-  if (!user) {
+  if (!user || !auth) {
     return null;
   }
 

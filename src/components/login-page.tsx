@@ -27,6 +27,14 @@ export function LoginPage() {
       });
       return;
     }
+    if (!auth) {
+      toast({
+        title: "Authentication Error",
+        description: "Firebase Auth is not available. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
