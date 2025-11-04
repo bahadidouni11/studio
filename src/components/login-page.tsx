@@ -38,13 +38,15 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Authentication error:", error);
-      toast({
-        title: "Sign-in Failed",
-        description: "Could not sign you in with Google. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error("Authentication error:", error);
+        toast({
+          title: "Sign-in Failed",
+          description: "Could not sign you in with Google. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
