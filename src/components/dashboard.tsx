@@ -8,14 +8,14 @@ import {
   Store,
   Users,
 } from 'lucide-react';
-import { serverTimestamp, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
+import { serverTimestamp, doc, Timestamp } from 'firebase/firestore';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Header } from './header';
 import { DiceIcon } from './dice-icon';
 import { PlayAndEarnIcon } from './play-and-earn-icon';
 import { SurveyIcon } from './survey-icon';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 
@@ -84,7 +84,7 @@ export default function Dashboard() {
     }
   }, [userProfile]);
 
-  const handleLoginReward = async () => {
+  const handleLoginReward = () => {
     if (!userDocRef || !firestore || !userProfile) return;
 
     if (isLoginRewardClaimed) {
@@ -96,25 +96,20 @@ export default function Dashboard() {
       return;
     }
 
-    try {
-      const newPoints = (userProfile.points || 0) + 100;
-      await updateDoc(userDocRef, {
-        points: newPoints,
-        lastLoginReward: serverTimestamp(),
-      });
-      toast({
-        title: 'Reward Claimed!',
-        description: 'You have received 100 points.',
-      });
-      setIsLoginRewardClaimed(true);
-    } catch (error) {
-      console.error('Error claiming login reward:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not claim the reward. Please try again.',
-        variant: 'destructive',
-      });
-    }
+    const newPoints = (userProfile.points || 0) + 100;
+    
+    // Use non-blocking update to allow our custom error handler to catch permission errors
+    updateDocumentNonBlocking(userDocRef, {
+      points: newPoints,
+      lastLoginReward: serverTimestamp(),
+    });
+
+    toast({
+      title: 'Reward Claimed!',
+      description: 'You have received 100 points.',
+    });
+    // Optimistically update the UI
+    setIsLoginRewardClaimed(true);
   };
   
   const getOfferStatus = (offerId: string) => {
@@ -158,6 +153,7 @@ export default function Dashboard() {
                 href={isDisabled ? '#' : offer.href} 
                 onClick={offer.id === 'login-reward' ? handleLoginReward : undefined}
                 className={isDisabled ? 'pointer-events-none' : ''}
+                passHref
               >
                 <Card
                   className={`flex h-32 flex-col items-center justify-center rounded-2xl ${
