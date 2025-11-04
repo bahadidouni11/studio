@@ -1,0 +1,151 @@
+/**
+ * @fileoverview Firestore Security Rules for CartagPay Rewards App
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user profiles and offer progress,
+ * while allowing public read access to offers. Authorization is primarily path-based.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile data, accessible only to the user themselves.
+ * - /offers/{offerId}: Stores offer details, publicly readable.
+ * - /users/{userId}/offerProgress/{offerId}: Stores individual user's progress on offers,
+ *   accessible only to the user.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own profile data and offer progress.
+ * - Offers are publicly readable but not writable by clients.
+ * - Listing of offers is public. Listing of user offer progress is restricted to the user.
+ * - The rules perform schema validation for critical fields like points and daily rewards.
+ *
+ * Denormalization for Authorization:
+ * - Path-based authorization is used to avoid `get()` calls. The `userId` in the paths
+ *   `/users/{userId}` and `/users/{userId}/offerProgress/{offerId}` is the single source
+ *   of truth for access control.
+ *
+ * Structural Segregation:
+ * - Public (offers) and private (user profiles, user offer progress) data are stored in separate
+ *   collections to simplify access control and optimize list operations.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secures user profile data, ensuring only the user can read and write their own profile.
+     * @path /users/{userId}
+     * @allow (create) User with ID 'user123' creates a profile with id: 'user123'.
+     * @deny (create) User with ID 'user123' attempts to create a profile with id: 'user456'.
+     * @allow (get) User with ID 'user123' reads their own profile data.
+     * @allow (update) User with ID 'user123' updates their own profile data.
+     * @allow (delete) User with ID 'user123' deletes their own profile data.
+     * @deny (get) User with ID 'user456' attempts to read profile data of user 'user123'.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+          return isOwner(userId) && resource != null;
+      }
+      
+      function incomingPoints() {
+        return request.resource.data.points;
+      }
+      
+      function existingPoints() {
+        // Return 0 if points field does not exist yet.
+        return resource.data.get('points', 0);
+      }
+      
+      function incomingLastLoginReward() {
+        return request.resource.data.lastLoginReward;
+      }
+      
+      function existingLastLoginReward() {
+         return resource.data.get('lastLoginReward', null);
+      }
+
+      // Allow reads only to the owner
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      // Allow profile creation with initial data
+      allow create: if isOwner(userId) 
+                    && request.resource.data.id == userId
+                    && request.resource.data.points == 0
+                    && request.resource.data.lastLoginReward == null;
+
+      // Allow updates by the owner with specific constraints
+      allow update: if isExistingOwner(userId)
+                     && request.resource.data.id == resource.data.id
+                     // Logic for reward claims and other updates
+                     && (
+                          // Daily login reward logic:
+                          (
+                            incomingLastLoginReward() != existingLastLoginReward()
+                            // Allow first claim when last reward was null OR subsequent claims after 24h
+                            && (existingLastLoginReward() == null || request.time > existingLastLoginReward() + duration.value(24, 'h'))
+                            // Ensure points increase by exactly 100
+                            && incomingPoints() == existingPoints() + 100
+                           ) 
+                           || 
+                           // Referral reward logic
+                           (
+                            incomingPoints() == existingPoints() + 3000 &&
+                            incomingLastLoginReward() == existingLastLoginReward()
+                           )
+                           ||
+                           // Allow other fields to be updated without changing points/reward time
+                           (
+                            incomingPoints() == existingPoints() &&
+                            incomingLastLoginReward() == existingLastLoginReward()
+                           )
+                         );
+
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Allows public read access to offers.
+     * @path /offers/{offerId}
+     * @allow (get) Any user can retrieve an offer.
+     * @allow (list) Any user can list offers.
+     * @deny (create) No user can create an offer.
+     * @deny (update) No user can update an offer.
+     * @deny (delete) No user can delete an offer.
+     * @principle Allows public read access while restricting write access.
+     */
+    match /offers/{offerId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Secures user offer progress, ensuring only the user can read and write their own progress.
+     * @path /users/{userId}/offerProgress/{offerId}
+     * @allow (create) User with ID 'user123' creates offer progress with userId: 'user123'.
+     * @deny (create) User with ID 'user123' attempts to create offer progress with userId: 'user456'.
+     * @allow (get) User with ID 'user123' reads their own offer progress.
+     * @allow (update) User with ID 'user123' updates their own offer progress.
+     * @allow (delete) User with ID 'user123' deletes their own offer progress.
+     * @deny (get) User with ID 'user456' attempts to read offer progress of user 'user123'.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data.
+     */
+    match /users/{userId}/offerProgress/{offerId} {
+       function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+          return isOwner(userId) && resource != null;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

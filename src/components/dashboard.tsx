@@ -51,10 +51,10 @@ const offers = [
     href: '/coming-soon',
   },
   {
-    id: 'stats',
-    title: 'Stats',
-    icon: <BarChart2 className="h-10 w-10 text-white" />,
-    href: '/coming-soon',
+    id: 'invite',
+    title: 'Invite',
+    icon: <Users className="h-10 w-10 text-white" />,
+    href: '#',
   },
 ];
 
@@ -98,7 +98,6 @@ export default function Dashboard() {
 
     const newPoints = (userProfile.points || 0) + 100;
     
-    // Use non-blocking update to allow our custom error handler to catch permission errors
     updateDocumentNonBlocking(userDocRef, {
       points: newPoints,
       lastLoginReward: serverTimestamp(),
@@ -112,12 +111,40 @@ export default function Dashboard() {
     setIsLoginRewardClaimed(true);
   };
   
+  const handleInvite = () => {
+    if (!user) return;
+    const referralLink = `${window.location.origin}/?ref=${user.uid}`;
+    navigator.clipboard.writeText(referralLink).then(() => {
+      toast({
+        title: 'Link Copied!',
+        description: 'Your referral link has been copied to the clipboard.',
+      });
+    }).catch(err => {
+      console.error('Failed to copy referral link: ', err);
+      toast({
+        title: 'Failed to Copy',
+        description: 'Could not copy the referral link.',
+        variant: 'destructive',
+      });
+    });
+  };
+
   const getOfferStatus = (offerId: string) => {
     if (offerId === 'login-reward') {
       return isLoginRewardClaimed ? 'Reward Collected' : 'Collect Reward';
     }
     return undefined;
   };
+  
+  const getOfferAction = (offerId: string) => {
+    if (offerId === 'login-reward') {
+        return handleLoginReward;
+    }
+    if (offerId === 'invite') {
+        return handleInvite;
+    }
+    return undefined;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-900 text-white">
@@ -146,12 +173,13 @@ export default function Dashboard() {
           {offers.map((offer) => {
             const isDisabled = offer.id === 'login-reward' && isLoginRewardClaimed;
             const status = getOfferStatus(offer.id);
+            const action = getOfferAction(offer.id);
 
             return (
               <Link 
                 key={offer.id} 
                 href={isDisabled ? '#' : offer.href} 
-                onClick={offer.id === 'login-reward' ? handleLoginReward : undefined}
+                onClick={action}
                 className={isDisabled ? 'pointer-events-none' : ''}
                 passHref
               >
