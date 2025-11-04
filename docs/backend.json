@@ -1,0 +1,179 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile in the CartagPay Rewards app.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "googleId": {
+          "type": "string",
+          "description": "The user's Google ID, obtained from Google Sign-In."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name, obtained from Google Sign-In."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL of the user's profile picture, obtained from Google Sign-In.",
+          "format": "uri"
+        },
+        "termsAgreed": {
+          "type": "boolean",
+          "description": "Indicates whether the user has agreed to the terms and privacy policy."
+        }
+      },
+      "required": [
+        "id",
+        "googleId",
+        "email",
+        "displayName",
+        "termsAgreed"
+      ]
+    },
+    "Offer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Offer",
+      "type": "object",
+      "description": "Represents an offer available to users.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the offer."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the offer."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the offer."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the image for the offer.",
+          "format": "uri"
+        },
+        "rewardPoints": {
+          "type": "number",
+          "description": "The number of reward points a user receives after completing the offer."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "imageUrl",
+        "rewardPoints"
+      ]
+    },
+    "UserOfferProgress": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserOfferProgress",
+      "type": "object",
+      "description": "Represents the progress of a user in completing a specific offer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user offer progress."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N UserOfferProgress)"
+        },
+        "offerId": {
+          "type": "string",
+          "description": "Reference to Offer. (Relationship: Offer 1:N UserOfferProgress)"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Indicates whether the user has completed the offer."
+        },
+        "completionDate": {
+          "type": "string",
+          "description": "The date and time when the user completed the offer.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "offerId",
+        "completed"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. Access is restricted to the user with the matching userId. Includes Google Sign-In details and terms agreement status.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/offers/{offerId}",
+        "definition": {
+          "entityName": "Offer",
+          "schema": {
+            "$ref": "#/backend/entities/Offer"
+          },
+          "description": "Stores information about available offers. Offers are publicly readable.",
+          "params": [
+            {
+              "name": "offerId",
+              "description": "The unique identifier for the offer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/offerProgress/{offerId}",
+        "definition": {
+          "entityName": "UserOfferProgress",
+          "schema": {
+            "$ref": "#/backend/entities/UserOfferProgress"
+          },
+          "description": "Stores the progress of a user for a specific offer. Access is restricted to the user with the matching userId.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "offerId",
+              "description": "The unique identifier for the offer."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the CartagPay Rewards application, focusing on user profiles, offers, and user progress. The structure prioritizes security, scalability, and ease of debugging by adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). \n\n*   **User Profiles:** User profiles are stored under the `/users/{userId}` path, ensuring that each user's data is isolated and directly owned by their `userId`. This structure facilitates simple and secure access control based on the authenticated `userId`. No denormalization is required as access control is based solely on path ownership. The profile creation flow stores details for a specific user using their Google details.\n*   **Offers:** Offers are stored in a root-level collection `/offers`.  This allows for easy listing of all available offers, a core feature of the application. Since offers are intended to be publicly accessible (read-only for all users), no additional access control mechanisms are needed. \n*   **User Offer Progress:** The progress of users on specific offers is stored in the `/users/{userId}/offerProgress/{offerId}` collection. The `userId` in the path ensures clear ownership of the progress records. The `offerId` in path enable to get particular progress of an offer.  This structure enables secure and efficient querying and updating of user-specific offer progress.  Authorization Independence is guaranteed because access is strictly controlled by the `userId` in the path, and no data from other collections is required for authorization. No denormalization is needed as access control is based solely on path ownership.\n\nThis design achieves Authorization Independence by avoiding `get()` calls in security rules. Ownership is enforced via path-based rules (`/users/{userId}`). QAPs are supported by using structural segregation and path-based ownership, allowing secure list operations within user-owned collections."
+  }
+}
