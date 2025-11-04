@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Gift, Phone } from 'lucide-react';
 import { signInAnonymously } from 'firebase/auth';
+import { doc, getDoc, increment, writeBatch } from 'firebase/firestore';
 
 import { useAuth, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export function LoginPage() {
@@ -54,17 +54,29 @@ export function LoginPage() {
       const user = userCredential.user;
       
       const userRef = doc(firestore, 'users', user.uid);
-      setDocumentNonBlocking(
-        userRef,
-        {
-          id: user.uid,
-          phoneNumber: phoneNumber,
-          termsAgreed: true,
-          points: 0,
-          lastLoginReward: null,
-        },
-        { merge: true }
-      );
+
+      const referralCode = localStorage.getItem('referralCode');
+      
+      const batch = writeBatch(firestore);
+
+      batch.set(userRef, {
+        id: user.uid,
+        phoneNumber: phoneNumber,
+        termsAgreed: true,
+        points: 0,
+        lastLoginReward: null,
+      }, { merge: true });
+
+      if (referralCode && referralCode !== user.uid) {
+        const referrerRef = doc(firestore, 'users', referralCode);
+        const referrerDoc = await getDoc(referrerRef);
+        if (referrerDoc.exists()) {
+           batch.update(referrerRef, { points: increment(3000) });
+           localStorage.removeItem('referralCode'); // Clear after use
+        }
+      }
+
+      await batch.commit();
 
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user') {
